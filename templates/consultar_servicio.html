@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+    <title>Consultar Servicios - SGR</title>
+
+    <link rel="stylesheet" href="../css/style.css">
+
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #e9e9e9;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Sistema de Gestión de Reservas</h1>
+    <h2>Consultar servicios</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre del servicio</th>
+                <th>Precio (S/)</th>
+                <th>Duración (minutos)</th>
+            </tr>
+        </thead>
+
+        <tbody id="tabla-servicios">
+        </tbody>
+    </table>
+
+    <script>
+        function consultarServicios() {
+
+            const tabla = document.getElementById(
+                "tabla-servicios"
+            );
+
+            tabla.innerHTML = "";
+
+            const servicios = JSON.parse(
+                localStorage.getItem("sgr_servicios") || "[]"
+            );
+
+            if (servicios.length === 0) {
+                const fila = document.createElement("tr");
+                const celda = document.createElement("td");
+
+                celda.colSpan = 3;
+                celda.textContent =
+                    "No hay servicios registrados.";
+
+                fila.appendChild(celda);
+                tabla.appendChild(fila);
+                return;
+            }
+
+            servicios.forEach(function(servicio) {
+
+                const fila = document.createElement("tr");
+
+                const nombre = document.createElement("td");
+                nombre.textContent = servicio.nombre;
+
+                const precio = document.createElement("td");
+                precio.textContent =
+                    "S/ " + Number(servicio.precio).toFixed(2);
+
+                const duracion = document.createElement("td");
+                duracion.textContent =
+                    servicio.duracion_minutos + " min";
+
+                fila.appendChild(nombre);
+                fila.appendChild(precio);
+                fila.appendChild(duracion);
+
+                tabla.appendChild(fila);
+            });
+        }
+
+        consultarServicios();
+    </script>
+
+</body>
+</html>
