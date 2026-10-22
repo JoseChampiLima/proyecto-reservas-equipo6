@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block contenido %}
-<h2>Modificar Información del Cliente</h2>
+<h2>Editar Información del Cliente</h2>
 
 <div id="mensaje-alerta" style="display: none; margin-bottom: 15px; font-weight: bold;"></div>
 
@@ -23,7 +23,7 @@
     <br>
     <div>
         <label for="dni">DNI:</label>
-        <input type="text" id="dni" name="dni" maxlength="8" required>
+        <input type="text" id="dni" name="dni" maxlength="8" pattern="[0-9]{8}" required>
     </div>
     <br>
     <div>
@@ -36,26 +36,39 @@
         <input type="email" id="correo" name="correo">
     </div>
     <br>
-    <button type="submit">Guardar Cambios</button>
-    <a href="registrar_cliente.html"><button type="button">Cancelar</button></a>
+    <button type="submit" id="btn-guardar">Guardar Cambios</button>
+    <a href="./consultar_cliente.html"><button type="button">Cancelar</button></a>
 </form>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const urlParams = new URLSearchParams(window.location.search);
     const clienteId = urlParams.get('id');
+    const alerta = document.getElementById('mensaje-alerta');
+    const form = document.getElementById('form-editar-cliente');
 
     let clientes = JSON.parse(localStorage.getItem('clientes')) || [];
-    const cliente = clientes.find(c => c.id == clienteId) || clientes[0];
+    
+    //  Buscar cliente exacto por ID sin fallbacks no deseados
+    const cliente = clientes.find(c => c.id == clienteId);
 
-    if (cliente) {
-        document.getElementById('cliente-id').value = cliente.id;
-        document.getElementById('nombres').value = cliente.nombres;
-        document.getElementById('apellidos').value = cliente.apellidos;
-        document.getElementById('dni').value = cliente.dni;
-        document.getElementById('telefono').value = cliente.telefono || '';
-        document.getElementById('correo').value = cliente.correo || '';
+    if (!clienteId || !cliente) {
+        alerta.style.color = "red";
+        alerta.innerText = "Error: No se encontró ningún cliente válido con el ID especificado.";
+        alerta.style.display = "block";
+        
+        // Deshabilitar formulario si el ID no existe
+        Array.from(form.elements).forEach(element => element.disabled = true);
+        return;
     }
+
+    // Cargar datos en el formulario
+    document.getElementById('cliente-id').value = cliente.id;
+    document.getElementById('nombres').value = cliente.nombres;
+    document.getElementById('apellidos').value = cliente.apellidos;
+    document.getElementById('dni').value = cliente.dni;
+    document.getElementById('telefono').value = cliente.telefono || '';
+    document.getElementById('correo').value = cliente.correo || '';
 });
 
 document.getElementById('form-editar-cliente').addEventListener('submit', function(e) {
@@ -76,7 +89,25 @@ document.getElementById('form-editar-cliente').addEventListener('submit', functi
         return;
     }
 
+    // Validar estrictamente 8 dígitos numéricos
+    if (dni.length !== 8 || isNaN(dni)) {
+        alerta.style.color = "red";
+        alerta.innerText = "El DNI debe contener exactamente 8 números.";
+        alerta.style.display = "block";
+        return;
+    }
+
     let clientes = JSON.parse(localStorage.getItem('clientes')) || [];
+    
+    // Validar que el DNI no pertenezca a otro cliente distinto
+    const dniDuplicado = clientes.some(c => c.dni === dni && c.id != id);
+    if (dniDuplicado) {
+        alerta.style.color = "red";
+        alerta.innerText = "El DNI ingresado ya está registrado para otro cliente.";
+        alerta.style.display = "block";
+        return;
+    }
+
     const index = clientes.findIndex(c => c.id == id);
 
     if (index !== -1) {
@@ -93,8 +124,8 @@ document.getElementById('form-editar-cliente').addEventListener('submit', functi
         alerta.style.display = "block";
         
         setTimeout(() => {
-            window.location.href = "registrar_cliente.html";
-        }, 1500);
+            window.location.assign("./consultar_cliente.html");
+        }, 1200);
     }
 });
 </script>
