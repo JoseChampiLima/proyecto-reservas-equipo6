@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+<h2>Registrar Nuevo Cliente</h2>
+
+<!-- Mensaje de alerta -->
+<div id="mensaje-alerta" style="display: none; margin-bottom: 15px; font-weight: bold;"></div>
+
+<!-- Formulario de Registro -->
+<form id="form-registrar-cliente">
+    <div>
+        <label for="nombres">Nombres:</label>
+        <input type="text" id="nombres" name="nombres" required>
+    </div>
+    <br>
+    <div>
+        <label for="apellidos">Apellidos:</label>
+        <input type="text" id="apellidos" name="apellidos" required>
+    </div>
+    <br>
+    <div>
+        <label for="dni">DNI:</label>
+        <input type="text" id="dni" name="dni" maxlength="8" pattern="[0-9]{8}" required>
+    </div>
+    <br>
+    <div>
+        <label for="telefono">Teléfono:</label>
+        <input type="text" id="telefono" name="telefono">
+    </div>
+    <br>
+    <div>
+        <label for="correo">Correo Electrónico:</label>
+        <input type="email" id="correo" name="correo">
+    </div>
+    <br>
+    <button type="submit">Guardar Cliente</button>
+    <a href="./consultar_cliente.html">
+        <button type="button" style="background-color: #17a2b8; color: white; border: none; padding: 6px 12px; cursor: pointer; border-radius: 3px;">
+            Ver Lista de Clientes
+        </button>
+    </a>
+</form>
+
+<script>
+document.getElementById('form-registrar-cliente').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const nombres = document.getElementById('nombres').value.trim();
+    const apellidos = document.getElementById('apellidos').value.trim();
+    const dni = document.getElementById('dni').value.trim();
+    const telefono = document.getElementById('telefono').value.trim();
+    const correo = document.getElementById('correo').value.trim();
+    const alerta = document.getElementById('mensaje-alerta');
+
+    if (!nombres || !apellidos || !dni) {
+        alerta.style.color = "red";
+        alerta.innerText = "Por favor, completa todos los campos obligatorios (*).";
+        alerta.style.display = "block";
+        return;
+    }
+
+    let clientes = JSON.parse(localStorage.getItem('clientes')) || [];
+    
+    if (clientes.some(c => c.dni === dni)) {
+        alerta.style.color = "red";
+        alerta.innerText = "Error: El DNI " + dni + " ya se encuentra registrado.";
+        alerta.style.display = "block";
+        return;
+    }
+
+    const nuevoCliente = { id: Date.now(), nombres, apellidos, dni, telefono, correo };
+    clientes.push(nuevoCliente);
+    localStorage.setItem('clientes', JSON.stringify(clientes));
+
+    alerta.style.color = "green";
+    alerta.innerText = "¡Cliente registrado con éxito!";
+    alerta.style.display = "block";
+    document.getElementById('form-registrar-cliente').reset();
+});
+</script>
+{% endblock %}
