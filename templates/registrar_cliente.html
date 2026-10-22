@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+<h2>Registrar Nuevo Cliente</h2>
+
+<!-- Mensaje de alerta para errores -->
+<div id="mensaje-alerta" style="display: none; color: red; margin-bottom: 15px; font-weight: bold;"></div>
+
+<form id="form-registrar-cliente">
+    <div>
+        <label for="nombres">Nombres (*):</label>
+        <input type="text" id="nombres" name="nombres" required>
+    </div>
+    <br>
+    <div>
+        <label for="apellidos">Apellidos (*):</label>
+        <input type="text" id="apellidos" name="apellidos" required>
+    </div>
+    <br>
+    <div>
+        <label for="dni">DNI (*):</label>
+        <input type="text" id="dni" name="dni" maxlength="8" pattern="[0-9]{8}" title="Debe contener 8 dígitos numéricos" required>
+    </div>
+    <br>
+    <div>
+        <label for="telefono">Teléfono:</label>
+        <input type="text" id="telefono" name="telefono">
+    </div>
+    <br>
+    <div>
+        <label for="correo">Correo Electrónico:</label>
+        <input type="email" id="correo" name="correo">
+    </div>
+    <br>
+    <button type="submit">Guardar Cliente</button>
+</form>
+
+<script>
+document.getElementById('form-registrar-cliente').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const nombres = document.getElementById('nombres').value.trim();
+    const apellidos = document.getElementById('apellidos').value.trim();
+    const dni = document.getElementById('dni').value.trim();
+    const telefono = document.getElementById('telefono').value.trim();
+    const correo = document.getElementById('correo').value.trim();
+    const alerta = document.getElementById('mensaje-alerta');
+
+    // 1. Validar que los campos obligatorios no estén vacíos
+    if (!nombres || !apellidos || !dni) {
+        alerta.style.color = "red";
+        alerta.innerText = "Por favor, completa todos los campos obligatorios (*).";
+        alerta.style.display = "block";
+        return;
+    }
+
+    // 2. Validar formato de DNI (8 dígitos)
+    if (dni.length !== 8 || isNaN(dni)) {
+        alerta.style.color = "red";
+        alerta.innerText = "El DNI debe tener exactamente 8 números.";
+        alerta.style.display = "block";
+        return;
+    }
+
+    // 3. Validar DNI único consultando el almacenamiento local (localStorage)
+    let clientes = JSON.parse(localStorage.getItem('clientes')) || [];
+    
+    const dniExistente = clientes.some(cliente => cliente.dni === dni);
+    if (dniExistente) {
+        alerta.style.color = "red";
+        alerta.innerText = "Error: El DNI " + dni + " ya se encuentra registrado.";
+        alerta.style.display = "block";
+        return;
+    }
+
+    // 4. Guardar cliente si la validación es correcta
+    const nuevoCliente = {
+        id: Date.now(),
+        nombres: nombres,
+        apellidos: apellidos,
+        dni: dni,
+        telefono: telefono,
+        correo: correo
+    };
+
+    clientes.push(nuevoCliente);
+    localStorage.setItem('clientes', JSON.stringify(clientes));
+
+    // Confirmación y reseteo
+    alerta.style.color = "green";
+    alerta.innerText = "¡Cliente registrado con éxito!";
+    alerta.style.display = "block";
+    document.getElementById('form-registrar-cliente').reset();
+});
+</script>
+{% endblock %}
