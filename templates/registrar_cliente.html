@@ -1,25 +1,27 @@
 {% extends "base.html" %}
 
 {% block contenido %}
-<h2>Registrar Nuevo Cliente</h2>
+<h2>Módulo de Clientes</h2>
 
-<!-- Mensaje de alerta para errores -->
-<div id="mensaje-alerta" style="display: none; color: red; margin-bottom: 15px; font-weight: bold;"></div>
+<!-- Mensaje de alerta -->
+<div id="mensaje-alerta" style="display: none; margin-bottom: 15px; font-weight: bold;"></div>
 
+<!-- Formulario de Registro -->
 <form id="form-registrar-cliente">
+    <h3>Registrar Nuevo Cliente</h3>
     <div>
-        <label for="nombres">Nombres (*):</label>
+        <label for="nombres">Nombres:</label>
         <input type="text" id="nombres" name="nombres" required>
     </div>
     <br>
     <div>
-        <label for="apellidos">Apellidos (*):</label>
+        <label for="apellidos">Apellidos:</label>
         <input type="text" id="apellidos" name="apellidos" required>
     </div>
     <br>
     <div>
-        <label for="dni">DNI (*):</label>
-        <input type="text" id="dni" name="dni" maxlength="8" pattern="[0-9]{8}" title="Debe contener 8 dígitos numéricos" required>
+        <label for="dni">DNI:</label>
+        <input type="text" id="dni" name="dni" maxlength="8" pattern="[0-9]{8}" required>
     </div>
     <br>
     <div>
@@ -35,7 +37,57 @@
     <button type="submit">Guardar Cliente</button>
 </form>
 
+<hr>
+
+<!-- Lista de Clientes Registrados con Botón para Editar -->
+<h3>Lista de Clientes</h3>
+<table border="1" cellpadding="8" cellspacing="0" style="width: 100%; border-collapse: collapse;">
+    <thead>
+        <tr style="background-color: #f2f2f2;">
+            <th>DNI</th>
+            <th>Nombres y Apellidos</th>
+            <th>Teléfono</th>
+            <th>Correo</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody id="tabla-clientes">
+        <!-- Se llena dinámicamente con JS -->
+    </tbody>
+</table>
+
 <script>
+function cargarTablaClientes() {
+    const clientes = JSON.parse(localStorage.getItem('clientes')) || [];
+    const tbody = document.getElementById('tabla-clientes');
+    tbody.innerHTML = '';
+
+    if (clientes.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No hay clientes registrados.</td></tr>';
+        return;
+    }
+
+    clientes.forEach(cliente => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${cliente.dni}</td>
+            <td>${cliente.nombres} ${cliente.apellidos}</td>
+            <td>${cliente.telefono || '-'}</td>
+            <td>${cliente.correo || '-'}</td>
+            <td style="text-align: center;">
+                <a href="editar_cliente.html?id=${cliente.id}">
+                    <button type="button" style="background-color: #ffc107; border: none; padding: 5px 10px; cursor: pointer; border-radius: 3px;">
+                        Editar
+                    </button>
+                </a>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', cargarTablaClientes);
+
 document.getElementById('form-registrar-cliente').addEventListener('submit', function(e) {
     e.preventDefault();
 
@@ -46,7 +98,6 @@ document.getElementById('form-registrar-cliente').addEventListener('submit', fun
     const correo = document.getElementById('correo').value.trim();
     const alerta = document.getElementById('mensaje-alerta');
 
-    // 1. Validar que los campos obligatorios no estén vacíos
     if (!nombres || !apellidos || !dni) {
         alerta.style.color = "red";
         alerta.innerText = "Por favor, completa todos los campos obligatorios (*).";
@@ -54,43 +105,24 @@ document.getElementById('form-registrar-cliente').addEventListener('submit', fun
         return;
     }
 
-    // 2. Validar formato de DNI (8 dígitos)
-    if (dni.length !== 8 || isNaN(dni)) {
-        alerta.style.color = "red";
-        alerta.innerText = "El DNI debe tener exactamente 8 números.";
-        alerta.style.display = "block";
-        return;
-    }
-
-    // 3. Validar DNI único consultando el almacenamiento local (localStorage)
     let clientes = JSON.parse(localStorage.getItem('clientes')) || [];
     
-    const dniExistente = clientes.some(cliente => cliente.dni === dni);
-    if (dniExistente) {
+    if (clientes.some(c => c.dni === dni)) {
         alerta.style.color = "red";
         alerta.innerText = "Error: El DNI " + dni + " ya se encuentra registrado.";
         alerta.style.display = "block";
         return;
     }
 
-    // 4. Guardar cliente si la validación es correcta
-    const nuevoCliente = {
-        id: Date.now(),
-        nombres: nombres,
-        apellidos: apellidos,
-        dni: dni,
-        telefono: telefono,
-        correo: correo
-    };
-
+    const nuevoCliente = { id: Date.now(), nombres, apellidos, dni, telefono, correo };
     clientes.push(nuevoCliente);
     localStorage.setItem('clientes', JSON.stringify(clientes));
 
-    // Confirmación y reseteo
     alerta.style.color = "green";
     alerta.innerText = "¡Cliente registrado con éxito!";
     alerta.style.display = "block";
     document.getElementById('form-registrar-cliente').reset();
+    cargarTablaClientes();
 });
 </script>
 {% endblock %}
