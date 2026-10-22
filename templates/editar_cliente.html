@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block contenido %}
+<h2>Modificar Información del Cliente</h2>
+
+<div id="mensaje-alerta" style="display: none; margin-bottom: 15px; font-weight: bold;"></div>
+
+<form id="form-editar-cliente">
+    <div>
+        <label for="cliente-id">ID de Cliente:</label>
+        <input type="text" id="cliente-id" name="cliente-id" disabled style="background-color: #e9ecef;">
+    </div>
+    <br>
+    <div>
+        <label for="nombres">Nombres:</label>
+        <input type="text" id="nombres" name="nombres" required>
+    </div>
+    <br>
+    <div>
+        <label for="apellidos">Apellidos:</label>
+        <input type="text" id="apellidos" name="apellidos" required>
+    </div>
+    <br>
+    <div>
+        <label for="dni">DNI:</label>
+        <input type="text" id="dni" name="dni" maxlength="8" required>
+    </div>
+    <br>
+    <div>
+        <label for="telefono">Teléfono:</label>
+        <input type="text" id="telefono" name="telefono">
+    </div>
+    <br>
+    <div>
+        <label for="correo">Correo Electrónico:</label>
+        <input type="email" id="correo" name="correo">
+    </div>
+    <br>
+    <button type="submit">Guardar Cambios</button>
+    <a href="registrar_cliente.html"><button type="button">Cancelar</button></a>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const clienteId = urlParams.get('id');
+
+    let clientes = JSON.parse(localStorage.getItem('clientes')) || [];
+    const cliente = clientes.find(c => c.id == clienteId) || clientes[0];
+
+    if (cliente) {
+        document.getElementById('cliente-id').value = cliente.id;
+        document.getElementById('nombres').value = cliente.nombres;
+        document.getElementById('apellidos').value = cliente.apellidos;
+        document.getElementById('dni').value = cliente.dni;
+        document.getElementById('telefono').value = cliente.telefono || '';
+        document.getElementById('correo').value = cliente.correo || '';
+    }
+});
+
+document.getElementById('form-editar-cliente').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const id = document.getElementById('cliente-id').value;
+    const nombres = document.getElementById('nombres').value.trim();
+    const apellidos = document.getElementById('apellidos').value.trim();
+    const dni = document.getElementById('dni').value.trim();
+    const telefono = document.getElementById('telefono').value.trim();
+    const correo = document.getElementById('correo').value.trim();
+    const alerta = document.getElementById('mensaje-alerta');
+
+    if (!nombres || !apellidos || !dni) {
+        alerta.style.color = "red";
+        alerta.innerText = "Los campos obligatorios (*) no pueden quedar vacíos.";
+        alerta.style.display = "block";
+        return;
+    }
+
+    let clientes = JSON.parse(localStorage.getItem('clientes')) || [];
+    const index = clientes.findIndex(c => c.id == id);
+
+    if (index !== -1) {
+        clientes[index].nombres = nombres;
+        clientes[index].apellidos = apellidos;
+        clientes[index].dni = dni;
+        clientes[index].telefono = telefono;
+        clientes[index].correo = correo;
+
+        localStorage.setItem('clientes', JSON.stringify(clientes));
+
+        alerta.style.color = "green";
+        alerta.innerText = "¡Información del cliente actualizada con éxito!";
+        alerta.style.display = "block";
+        
+        setTimeout(() => {
+            window.location.href = "registrar_cliente.html";
+        }, 1500);
+    }
+});
+</script>
+{% endblock %}
