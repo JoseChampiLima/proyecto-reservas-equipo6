@@ -39,6 +39,17 @@
             const precio = Number(document.getElementById("precio").value);
             const duracion = Number(document.getElementById("duracion").value);
 
+            const mensaje = document.getElementById("mensaje");
+
+            if (precio <= 0 || duracion <= 0) {
+                mensaje.style.color = "red";
+                mensaje.textContent =
+                    "Error: el precio y la duración deben ser mayores que cero.";
+                return;
+            }
+
+            mensaje.style.color = "green";
+
             const servicios = JSON.parse(
                 localStorage.getItem("sgr_servicios") || "[]"
             );
