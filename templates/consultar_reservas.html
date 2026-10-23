@@ -1,0 +1,187 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consultar reservas - SGR</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+    <h1>Sistema de Gestión de Reservas</h1>
+    <h2>Consultar reservas</h2>
+
+    <p><a href="../index.html">Volver al inicio</a></p>
+
+    <label for="filtro-fecha">Filtrar por fecha:</label>
+    <input type="date" id="filtro-fecha">
+
+    <label for="filtro-estado">Filtrar por estado:</label>
+    <select id="filtro-estado">
+        <option value="">Todas</option>
+        <option value="Activa">Activa</option>
+        <option value="Cancelada">Cancelada</option>
+    </select>
+
+    <button type="button" id="btn-buscar">Buscar</button>
+    <button type="button" id="btn-limpiar">Limpiar filtros</button>
+
+    <p id="mensaje"></p>
+
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Cliente</th>
+                <th>Servicio</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Estado</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody id="tabla-reservas"></tbody>
+    </table>
+
+    <script>
+        const tabla = document.getElementById("tabla-reservas");
+        const mensaje = document.getElementById("mensaje");
+        const filtroFecha = document.getElementById("filtro-fecha");
+        const filtroEstado = document.getElementById("filtro-estado");
+
+        function obtenerDatos() {
+            return {
+                reservas: JSON.parse(
+                    localStorage.getItem("sgr_reservas") || "[]"
+                ),
+                clientes: JSON.parse(
+                    localStorage.getItem("clientes") || "[]"
+                ),
+                servicios: JSON.parse(
+                    localStorage.getItem("sgr_servicios") || "[]"
+                )
+            };
+        }
+
+        function obtenerCliente(clientes, clienteId) {
+            const cliente = clientes.find(
+                c => Number(c.id) === Number(clienteId)
+            );
+
+            return cliente
+                ? cliente.nombres + " " + cliente.apellidos
+                : "Cliente no encontrado";
+        }
+
+        function obtenerServicio(servicios, servicioId) {
+            const servicio = servicios.find(
+                s => Number(s.id) === Number(servicioId)
+            );
+
+            return servicio ? servicio.nombre : "Servicio no encontrado";
+        }
+
+        function cancelarReserva(id) {
+            const confirmar = window.confirm(
+                "¿Estás segura de que deseas cancelar esta reserva?"
+            );
+
+            if (!confirmar) return;
+
+            const datos = obtenerDatos();
+            const reserva = datos.reservas.find(
+                r => Number(r.id) === Number(id)
+            );
+
+            if (!reserva || reserva.estado === "Cancelada") return;
+
+            reserva.estado = "Cancelada";
+
+            localStorage.setItem(
+                "sgr_reservas",
+                JSON.stringify(datos.reservas)
+            );
+
+            mensaje.style.color = "green";
+            mensaje.textContent = "Reserva cancelada correctamente.";
+
+            mostrarReservas();
+        }
+
+        function mostrarReservas() {
+            const datos = obtenerDatos();
+            const fecha = filtroFecha.value;
+            const estado = filtroEstado.value;
+
+            tabla.innerHTML = "";
+            mensaje.textContent = "";
+
+            const filtradas = datos.reservas.filter(function(reserva) {
+                const coincideFecha =
+                    !fecha || reserva.fecha === fecha;
+
+                const estadoActual = reserva.estado || "Activa";
+                const coincideEstado =
+                    !estado || estadoActual === estado;
+
+                return coincideFecha && coincideEstado;
+            });
+
+            if (filtradas.length === 0) {
+                mensaje.textContent = "No se encontraron reservas.";
+                return;
+            }
+
+            filtradas.forEach(function(reserva) {
+                const fila = document.createElement("tr");
+
+                const valores = [
+                    obtenerCliente(datos.clientes, reserva.cliente_id),
+                    obtenerServicio(datos.servicios, reserva.servicio_id),
+                    reserva.fecha,
+                    reserva.hora,
+                    reserva.estado || "Activa"
+                ];
+
+                valores.forEach(function(valor) {
+                    const celda = document.createElement("td");
+                    celda.textContent = valor;
+                    fila.appendChild(celda);
+                });
+
+                const celdaAccion = document.createElement("td");
+
+                if ((reserva.estado || "Activa") === "Activa") {
+                    const boton = document.createElement("button");
+                    boton.textContent = "Cancelar";
+                    boton.type = "button";
+                    boton.addEventListener("click", function() {
+                        cancelarReserva(reserva.id);
+                    });
+                    celdaAccion.appendChild(boton);
+                } else {
+                    celdaAccion.textContent = "Sin acciones";
+                }
+
+                fila.appendChild(celdaAccion);
+                tabla.appendChild(fila);
+            });
+        }
+
+        document.getElementById("btn-buscar").addEventListener(
+            "click", mostrarReservas
+        );
+
+        document.getElementById("btn-limpiar").addEventListener(
+            "click", function() {
+                filtroFecha.value = "";
+                filtroEstado.value = "";
+                mostrarReservas();
+            }
+        );
+
+        mostrarReservas();
+    </script>
+
+</body>
+</html>
