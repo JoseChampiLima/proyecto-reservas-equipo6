@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Reserva - SGR</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+
+<body>
+
+    <h1>Sistema de Gestión de Reservas</h1>
+    <h2>Registrar reserva</h2>
+
+    <form id="form-reserva">
+        <label for="cliente">Cliente</label><br>
+        <select id="cliente">
+            <option value="">Seleccione un cliente</option>
+        </select>
+        <br><br>
+
+        <label for="servicio">Servicio</label><br>
+        <select id="servicio">
+            <option value="">Seleccione un servicio</option>
+        </select>
+        <br><br>
+
+        <label for="fecha">Fecha</label><br>
+        <input type="date" id="fecha">
+        <br><br>
+
+        <label for="hora">Hora</label><br>
+        <input type="time" id="hora">
+        <br><br>
+
+        <button type="submit">Registrar reserva</button>
+    </form>
+
+    <p id="mensaje"></p>
+
+    <script>
+        const clientes = JSON.parse(localStorage.getItem("clientes") || "[]");
+        const servicios = JSON.parse(localStorage.getItem("sgr_servicios") || "[]");
+
+        const selectCliente = document.getElementById("cliente");
+        const selectServicio = document.getElementById("servicio");
+
+        // Llenar la lista de clientes
+        clientes.forEach(function (cliente) {
+            const opcion = document.createElement("option");
+            opcion.value = cliente.id;
+            opcion.textContent = cliente.dni + " - " + cliente.nombres + " " + cliente.apellidos;
+            selectCliente.appendChild(opcion);
+        });
+
+        // Llenar la lista de servicios
+        servicios.forEach(function (servicio) {
+            const opcion = document.createElement("option");
+            opcion.value = servicio.id;
+            opcion.textContent = servicio.nombre + " - S/ " + Number(servicio.precio).toFixed(2);
+            selectServicio.appendChild(opcion);
+        });
+
+        // Fecha de hoy en formato AAAA-MM-DD (hora local)
+        const d = new Date();
+        const hoy = d.getFullYear() + "-" +
+            String(d.getMonth() + 1).padStart(2, "0") + "-" +
+            String(d.getDate()).padStart(2, "0");
+
+        document.getElementById("fecha").min = hoy;
+
+        document.getElementById("form-reserva").addEventListener("submit", function (e) {
+            e.preventDefault();
+
+            const clienteId = selectCliente.value;
+            const servicioId = selectServicio.value;
+            const fecha = document.getElementById("fecha").value;
+            const hora = document.getElementById("hora").value;
+            const mensaje = document.getElementById("mensaje");
+
+            if (!clienteId || !servicioId || !fecha || !hora) {
+                mensaje.style.color = "red";
+                mensaje.textContent = "Error: complete todos los campos.";
+                return;
+            }
+
+            if (fecha < hoy) {
+                mensaje.style.color = "red";
+                mensaje.textContent = "Error: la fecha no puede ser anterior a hoy.";
+                return;
+            }
+
+            const reservas = JSON.parse(localStorage.getItem("sgr_reservas") || "[]");
+
+            reservas.push({
+                id: Date.now(),
+                cliente_id: Number(clienteId),
+                servicio_id: Number(servicioId),
+                fecha: fecha,
+                hora: hora,
+                estado: "Activa"
+            });
+
+            localStorage.setItem("sgr_reservas", JSON.stringify(reservas));
+
+            mensaje.style.color = "green";
+            mensaje.textContent = "Reserva registrada correctamente.";
+            this.reset();
+        });
+    </script>
+
+</body>
+
+</html>
